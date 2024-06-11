@@ -1,5 +1,32 @@
 // Definición de la clase Sensor
-class Sensor {}
+class Sensor {
+    constructor(id, name, type, value, unit, updated_at) {
+
+        //Verificar que el tipo de sensor sea válido
+        if(!Sensor.ValidType(type)){
+            throw new Error("Tipo de sensor no válido: ${type}")
+        }
+
+        this.id = id;
+        this.name = name;
+        this.type = type;
+        this.value = value;
+        this.unit = unit;
+        this.updated_at = updated_at;
+    }
+
+    //Método estático para validar el tipo de sensor
+    static ValidType(type){
+        const validType = ["temperature", "humidity", "pressure"];
+        return validType.includes(type);
+    }
+
+    // Setter para actualizar el valor del sensor y la fecha de actualización
+    set updateValue(newValue){
+        this.value = newValue;
+        this.updated_at = new Date().toISOString(); // Actualiza la fecha al momento actual
+    }
+}
 
 // Definición de la clase SensorManager
 class SensorManager {
@@ -21,13 +48,13 @@ class SensorManager {
             let newValue;
             // Genera un nuevo valor basado en el tipo de sensor
             switch (sensor.type) {
-                case "temperatura": // Rango de -30 a 50 grados Celsius
+                case "temperature": // Rango de -30 a 50 grados Celsius
                     newValue = (Math.random() * 80 - 30).toFixed(2);
                     break;
-                case "humedad": // Rango de 0 a 100%
+                case "humidity": // Rango de 0 a 100%
                     newValue = (Math.random() * 100).toFixed(2);
                     break;
-                case "presion": // Rango de 960 a 1040 hPa (hectopascales o milibares)
+                case "pressure": // Rango de 960 a 1040 hPa (hectopascales o milibares)
                     newValue = (Math.random() * 80 + 960).toFixed(2);
                     break;
                 default: // Valor por defecto si el tipo es desconocido
@@ -43,9 +70,37 @@ class SensorManager {
         }
     }
 
-    // Método para cargar sensores desde una URL (completar)
-    async loadSensors(url) {}
+    // Método para cargar sensores desde una URL 
+    async loadSensors(url) {
+        try{
+            // Realizar la petición HTTP GET para cargar los sensores desde sensors.json
+            const response = await fetch(url);
 
+            if (!response.ok){
+                throw new Error("Error al cargar los sensores: ${response.status} - ${response.statusText}");
+            }
+
+            //Convertir la respuesta a JSON
+            const sensorsData = await response.json();
+
+
+            // Iterar sobre los datos de los sensores y crear instancias de Sensor
+            sensorsData.forEach(sensorData => {
+                const sensor = new Sensor(sensorData.id, sensorData.name, sensorData.type, sensorData.value, sensorData.unit, sensorData.updated_at);
+                this.addSensor(sensor); // Agregar el sensor al arreglo de sensores
+            });
+
+            //Renderizar los sensores en la página
+            this.render();
+
+
+        } catch (error) {
+            console.error(`Error al cargar los sensores: ${error.message}`);
+        } finally {
+            console.log('Carga de sensores finalizada.'); 
+        }
+    }
+    
 
     // Método para renderizar la interfaz de usuario
     render() {
