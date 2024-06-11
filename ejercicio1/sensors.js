@@ -70,9 +70,38 @@ class SensorManager {
         }
     }
 
-    // Método para cargar sensores desde una URL (completar)
-    async loadSensors(url) {}
 
+    // Método para cargar sensores desde una URL 
+    async loadSensors(url) {
+        try{
+            // Realizar la petición HTTP GET para cargar los sensores desde sensors.json
+            const response = await fetch(url);
+
+            if (!response.ok){
+                throw new Error("Error al cargar los sensores: ${response.status} - ${response.statusText}");
+            }
+
+            //Convertir la respuesta a JSON
+            const sensorsData = await response.json();
+
+
+            // Iterar sobre los datos de los sensores y crear instancias de Sensor
+            sensorsData.forEach(sensorData => {
+                const sensor = new Sensor(sensorData.id, sensorData.name, sensorData.type, sensorData.value, sensorData.unit, sensorData.updated_at);
+                this.addSensor(sensor); // Agregar el sensor al arreglo de sensores
+            });
+
+            //Renderizar los sensores en la página
+            this.render();
+
+
+        } catch (error) {
+            console.error(`Error al cargar los sensores: ${error.message}`);
+        } finally {
+            console.log('Carga de sensores finalizada.'); 
+        }
+    }
+    
 
     // Método para renderizar la interfaz de usuario
     render() {
