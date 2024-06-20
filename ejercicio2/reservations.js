@@ -1,4 +1,16 @@
-class Customer {}
+// Definición de la clase Customer
+class Customer {
+    constructor(id, name, email){
+        this.id = id;
+        this.name = name;
+        this.email = email;
+    }
+
+    //Propiedad computada que devuelve la información del cliente
+    get info(){
+        return `Nombre: ${this.name}, Email: ${this.email}`;
+    }
+}
 
 class Reservation {}
 
