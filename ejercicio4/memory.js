@@ -1,3 +1,4 @@
+// Clase que representa una carta en el juego de memoria.
 class Card {
     constructor(name, img) {
         this.name = name;
@@ -37,18 +38,25 @@ class Card {
     //Método que cambia el estado de volteo de la carta en función de su estado actual.
     toggleFlip() {
         if (this.isFlipped) {
+            this.isFlipped = false
             this.#unflip();
         } else {
+            this.isFlipped = true
             this.#flip();
         }
     }
 
     //Método que verifica si la carta actual coincide con otra carta.
     matches(otherCard) {
-        return this.name === otherCard.name;
+        if (this.name === otherCard.name) {
+            return true
+        } else {
+            return false
+        }
     }
 }
 
+// Clase que representa el tablero del juego.
 class Board {
     constructor(cards) {
         this.cards = cards;
@@ -90,6 +98,27 @@ class Board {
             this.onCardClick(card);
         }
     }
+
+    //Método que mezcla las cartas del tablero.
+    shuffleCards() {
+        this.cards = this.cards.sort(() => Math.random() - 0.5);
+    }
+
+    //Método que posiciona todas las cartas en su estado inicial.
+    flipDownAllCards() {
+        let cards = this.cards
+        cards.forEach(card => {
+            card.isFlipped = true
+            card.toggleFlip()           
+        });
+    }
+
+    //Método que reinicia el tablero.
+    reset() {
+        this.flipDownAllCards();
+        this.shuffleCards()       
+        this.render()
+    }
 }
 
 class MemoryGame {
@@ -106,6 +135,13 @@ class MemoryGame {
         this.flipDuration = flipDuration;
         this.board.onCardClick = this.#handleCardClick.bind(this);
         this.board.reset();
+        this.count = 0; // Número de intentos realizados.
+        this.points = 0; // Puntaje del jugador.
+        this.maxPoints = 10000; //Puntaje máximo inicial.
+        this.punctuation = document.getElementById('points'); //Elemento HTML para mostrar el puntaje.
+        this.timer = document.getElementById('time'); // Elemento HTML para mostrar el tiempo.
+        this.time = 0; // Tiempo transcurrido.
+        this.interval = null; // Intervalo para el temporizador.
     }
 
     #handleCardClick(card) {
@@ -118,6 +154,69 @@ class MemoryGame {
             }
         }
     }
+
+    // Método que verifica si las cartas volteadas coinciden.
+    checkForMatch() {
+        let cards = this.flippedCards;
+        if (cards[0].matches(cards[1])) {
+            this.pointsGame();
+            this.matchedCards.push(cards[0]);
+            this.matchedCards.push(cards[1]);            
+            if (this.matchedCards.length === 12) {
+                this.stopGame()
+                this.punctuation.innerHTML = `Juego terminado!<br><br>Puntaje: ${this.points}<br><br>Intentos: ${this.count}`;
+                this.maxPoints = 10000;
+            }           
+        } else {
+            cards[0].toggleFlip()
+            cards[1].toggleFlip()
+        }
+        this.flippedCards = [];
+        this.count += 1;
+        if (this.matchedCards.length < 12) {
+            this.punctuation.innerHTML = `Intentos: ${this.count} Puntaje: ${this.points}`;            
+        }
+    }
+
+    // Método que calcula los puntos del juego.
+    pointsGame() {
+        this.maxPoints = this.maxPoints - (this.time * this.count * 10);
+        if (this.maxPoints > 0) {
+            this.points += this.maxPoints;
+            console.log(this.points)
+        }
+    }
+
+    // Método que inicia el temporizador del juego.
+    startGame() {
+        return new Promise((resolve) => {
+            this.interval = setInterval(() => {
+                this.time++;
+                this.timer.textContent = `Tiempo: ${this.time} segundos`;
+            }, 1000);
+            resolve();
+        });
+    }
+
+    // Método que detiene el temporizador del juego.
+    stopGame() {
+        return new Promise((resolve) => {
+            clearInterval(this.interval);
+            resolve();
+        });
+    }
+
+    // Método que resetea el juego.
+    resetGame() {
+        this.board.reset();
+        this.matchedCards = [];
+        this.count = 0;
+        this.time = 0;
+        this.points = 0;
+        this.punctuation.innerHTML = `Intentos: 0<br><br>Puntaje: 0`;
+        this.startGame()
+    }
+
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -136,6 +235,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ]);
     const board = new Board(cards);
     const memoryGame = new MemoryGame(board, 1000);
+    memoryGame.resetGame();
 
     document.getElementById("restart-button").addEventListener("click", () => {
         memoryGame.resetGame();
