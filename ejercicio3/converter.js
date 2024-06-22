@@ -37,14 +37,11 @@ class CurrencyConverter {
         }
     }
 
-
-    /*getCurrencies(apiUrl) {}*/
-
     //Método asíncrono para realizar la conversión de una moneda a otra
     async convertCurrency(amount, fromCurrency, toCurrency) {   // monto / origen / destino
 
         if (fromCurrency.code === toCurrency.code) {
-            return amount; // Si son la misma moneda, retorna el monto original
+            return parseFloat(amount); // Si son la misma moneda, retorna el monto original
         }
 
         try {
@@ -65,10 +62,9 @@ class CurrencyConverter {
             return null;
         }
     }
-
-    
 }
 
+    
 document.addEventListener("DOMContentLoaded", async () => {
     const form = document.getElementById("conversion-form");
     const resultDiv = document.getElementById("result");
@@ -99,9 +95,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         );
 
         if (convertedAmount !== null && !isNaN(convertedAmount)) {
+
             resultDiv.textContent = `${amount} ${
                 fromCurrency.code
             } son ${convertedAmount.toFixed(2)} ${toCurrency.code}`;
+            
         } else {
             resultDiv.textContent = "Error al realizar la conversión.";
         }
