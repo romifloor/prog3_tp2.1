@@ -22,14 +22,30 @@ class Card {
         return cardElement;
     }
 
+    //Método privado que voltea el elemento HTML de la carta mediante una animación CSS.
     #flip() {
         const cardElement = this.element.querySelector(".card");
         cardElement.classList.add("flipped");
     }
 
+    //Método privado que desvoltea el elemento HTML de la carta mediante una animación CSS.
     #unflip() {
         const cardElement = this.element.querySelector(".card");
         cardElement.classList.remove("flipped");
+    }
+
+    //Método que cambia el estado de volteo de la carta en función de su estado actual.
+    toggleFlip() {
+        if (this.isFlipped) {
+            this.#unflip();
+        } else {
+            this.#flip();
+        }
+    }
+
+    //Método que verifica si la carta actual coincide con otra carta.
+    matches(otherCard) {
+        return this.name === otherCard.name;
     }
 }
 
