@@ -62,6 +62,44 @@ class CurrencyConverter {
             return null;
         }
     }
+
+    async getExchangeRates(date) {
+        try {
+            const response = await fetch(`${this.apiUrl}/${date}`);
+            const data = await response.json();
+            return data.rates;
+        } catch (error) {
+            console.error(`Error ${date}:`, error);
+            return null;
+        }
+    }
+
+    async differenceExchangeRates(toCurrencyCode) {
+        const today = new Date();
+        const yesterday = new Date(today);
+        yesterday.setDate(today.getDate() - 1);
+
+        const formattedYesterday = yesterday.toISOString().split('T')[0];
+        const urlToday = `${this.apiUrl}/latest`;
+        const urlYesterday = `${this.apiUrl}/${formattedYesterday}`;
+
+        try {
+            const responseToday = await fetch(urlToday);
+            const dataToday = await responseToday.json();
+
+            const responseYesterday = await fetch(urlYesterday);
+            const dataYesterday = await responseYesterday.json();
+
+            const rateToday = dataToday.rates[toCurrencyCode];
+            const rateYesterday = dataYesterday.rates[toCurrencyCode];
+            const difference = rateToday - rateYesterday;
+
+            return { rateToday, rateYesterday, difference };
+        } catch (error) {
+            console.error('Error al comparar las tasas de cambio:', error);
+            return null;
+        }
+    }
 }
 
     
@@ -96,10 +134,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         if (convertedAmount !== null && !isNaN(convertedAmount)) {
 
-            resultDiv.textContent = `${amount} ${
-                fromCurrency.code
-            } son ${convertedAmount.toFixed(2)} ${toCurrency.code}`;
-            
+            const { rateToday, rateYesterday, difference } = await converter.differenceExchangeRates(toCurrency.code);
+
+            resultDiv.innerHTML = `
+                ${amount} ${fromCurrency.code} son ${convertedAmount.toFixed(2)} ${toCurrency.code}<br>
+                Tasa de cambio de hoy: ${rateToday}<br>
+                Tasa de cambio de ayer: ${rateYesterday}<br>
+                Diferencia: ${difference.toFixed(4)}`;
+
         } else {
             resultDiv.textContent = "Error al realizar la conversión.";
         }
